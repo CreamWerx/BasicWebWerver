@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 class Program
 {
-    private static string directoryPath = @"C:\Users\creamwx\Music\";
-    
-    private static BasicWebServer? server;// = new SimpleHttpServer(directoryPath);
+
+    private static string directoryPath = @"C:\Users\Standard\Videos\Movies\RedNotice\"; // default 
+    private static int port = 8000; // default
+    private static BasicWebServer? server;
     public static bool IsRunning { get; private set; }
     private static string NewLine = Environment.NewLine;
     public static string StartPrompt { get; private set; } = 
@@ -19,10 +20,11 @@ class Program
             $" Esc: Exit";
 
     
-    private static int port = 8000;
+    
 
     static Task Main(string[] args)
     {
+        Refresh();
         Prompt(StartPrompt);
         while (true)
         {
@@ -118,7 +120,6 @@ class Program
     {
         Console.WriteLine();
         Console.WriteLine("########### Basic HTTP Web Server ##########");
-        //Console.Write("\t");
         Console.WriteLine(msg);
         Console.WriteLine("############################################");
         Console.WriteLine();
@@ -143,42 +144,61 @@ class Program
         Console.Title = $"Serving: {directoryPath} on port {port}";
     }
 
-    static string? GenerateHtml(List<string> fileList, string indexFilePath)
+    static string? GenerateHtml(string indexFilePath, List<string> uLItems, List<string> oLItems)
     {
         string indexStringPath = indexFilePath.Replace(".html", ".txt");
         string html = File.ReadAllText(indexStringPath);
 
         // Insert items intp list
-        var splitHtml = html.Split("<!--list item-->");
+        html = InsertListIntoHtml(html, uLItems, "<!--ulist item-->");
+        html = InsertListIntoHtml(html, oLItems, "<!--olist item-->");
+        return html;
+    }
+
+    private static string InsertListIntoHtml(string html, List<string> lItems, string delim)
+    {
+        var splitHtml = html.Split(delim);
         var htmlTop = splitHtml[0];
         var htmlBottom = splitHtml[1];
 
-        foreach (var fileName in fileList)
+        foreach (var itemName in lItems)
         {
-            htmlTop += WrapInListTags(fileName);
+            htmlTop += WrapInUListTags(itemName);
         }
 
-        return htmlTop + htmlBottom;
+        html = htmlTop + htmlBottom;
+        return html;
     }
 
     static void Refresh()
     {
         //Console.WriteLine("refreshind folder...");
         var filePathList = Directory.GetFiles(directoryPath, "*.mp4").ToList();
-        List<string> fileNameList = new List<string>();
+        List<string> uLItems = new List<string>();
         foreach (string filePath in filePathList)
         {
-            fileNameList.Add(Path.GetFileName(filePath));
+            uLItems.Add(Path.GetFileName(filePath));
         }
+
+        List<string> oLItems = new();
+        oLItems.Add("a1");
+        oLItems.Add("a2");
+
         string indexFilePath = Path.Combine(directoryPath, "index.html");
-        string indexHtml = GenerateHtml(fileNameList, indexFilePath);
+        string indexHtml = GenerateHtml(indexFilePath, uLItems, oLItems);
 
         File.WriteAllText(indexFilePath, indexHtml);
+
     }
 
-    static string WrapInListTags(string fileName)
+    static string WrapInUListTags(string fileName)
     {
-        return $"""<li><a href="{fileName}">{fileName}</a></li>{Environment.NewLine}""";
+        return $"""<li><a href="{fileName}">{fileName}</a></li>{Environment.NewLine}{"\t\t\t"}""";
+    }
+
+    static string WrapInOListTags(string action)
+    {
+        return ($"""<li><a href="{action}">{action}</a></li>{Environment.NewLine}""").TrimEnd();
     }
 
     private static void StopServer(BasicWebServer server)
