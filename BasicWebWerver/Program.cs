@@ -1,14 +1,7 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-class Program
+﻿class Program
 {
 
-    private static string directoryPath = @"C:\Users\Standard\Videos\Movies\RedNotice\"; // default 
+    private static string directoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos); // default 
     private static int port = 8000; // default
     private static BasicWebServer? server;
     public static bool IsRunning { get; private set; }
@@ -19,12 +12,10 @@ class Program
             $" p: Set port.{NewLine}" +
             $" Esc: Exit";
 
-    
-    
-
     static Task Main(string[] args)
     {
-        Refresh();
+        //Refresh();
+        MediaGalleryGenerator.Generate(directoryPath);
         Prompt(StartPrompt);
         while (true)
         {
@@ -44,7 +35,7 @@ class Program
                 Setport();
                 continue;
             }
-            else if (StartKey.Key == ConsoleKey.Escape)
+            else if (StartKey.Key == ConsoleKey.Oem8)
             {
                 Environment.Exit(0);
             }
@@ -58,7 +49,7 @@ class Program
         while (true)
         {
             var key = Console.ReadKey(true);
-            if (key.Key == ConsoleKey.Escape)
+            if (key.Key == ConsoleKey.Oem8)
             {
                 StopServer(server);
 
@@ -66,7 +57,7 @@ class Program
                 while (true)
                 {
                     key = Console.ReadKey(true);
-                    if (key.Key == ConsoleKey.Escape)
+                    if (key.Key == ConsoleKey.Oem8)
                     {
                         Environment.Exit(0);
                     }
@@ -106,7 +97,7 @@ class Program
         if(Directory.Exists(dir))
         {
             directoryPath = dir;
-            Console.Clear() ;
+            Console.Clear();
             Console.WriteLine($"Root set: {directoryPath}");
             Prompt(StartPrompt);
             return;
@@ -147,7 +138,7 @@ class Program
     static string? GenerateHtml(string indexFilePath, List<string> uLItems, List<string> oLItems)
     {
         string indexStringPath = indexFilePath.Replace(".html", ".txt");
-        string html = File.ReadAllText(indexStringPath);
+        string html = File.ReadAllText(indexStringPath); // Exception: file does not exist
 
         // Insert items intp list
         html = InsertListIntoHtml(html, uLItems, "<!--ulist item-->");
